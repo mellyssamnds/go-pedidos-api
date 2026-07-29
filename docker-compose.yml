@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:18
+    container_name: api-pedidos-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: api_pedidos
+    ports:
+      - "5432:5432"
+    volumes:
+      - api-pedidos-data:/var/lib/postgresql/data
+
+volumes:
+  api-pedidos-data:
