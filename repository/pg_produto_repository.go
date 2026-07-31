@@ -102,3 +102,21 @@ func (r *PgProdutoRepository) FindAll(ctx context.Context) ([]model.Produto, err
 
 	return produtos, nil
 }
+
+func (r *PgProdutoRepository) UpdateStock(ctx context.Context, id uuid.UUID, newQuantity int) error {
+	query := `
+		UPDATE produtos
+		SET stock_quantity = $1
+		WHERE id = $2
+	`
+	result, err := r.db.Exec(ctx, query, newQuantity, id)
+	if err != nil {
+		return fmt.Errorf("erro ao atualizar estoque do produto: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return model.ErrProdutoNaoEncontrado
+	}
+
+	return nil
+}

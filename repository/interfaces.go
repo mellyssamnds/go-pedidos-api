@@ -18,6 +18,7 @@ type ProdutoRepository interface {
 	Save(ctx context.Context, produto model.Produto) error
 	FindByID(ctx context.Context, id uuid.UUID) (model.Produto, error)
 	FindAll(ctx context.Context) ([]model.Produto, error)
+	UpdateStock(ctx context.Context, id uuid.UUID, newQuantity int) error
 }
 
 type PedidoRepository interface {
