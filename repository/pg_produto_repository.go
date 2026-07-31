@@ -7,16 +7,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mellyssamnds/go-pedidos-api/model"
 )
 
 type PgProdutoRepository struct {
-	pool *pgxpool.Pool
+	db Querier
 }
 
-func NewPgProdutoRepository(pool *pgxpool.Pool) *PgProdutoRepository {
-	return &PgProdutoRepository{pool: pool}
+func NewPgProdutoRepository(db Querier) *PgProdutoRepository {
+	return &PgProdutoRepository{db: db}
 }
 
 var _ ProdutoRepository = (*PgProdutoRepository)(nil)
@@ -28,7 +27,7 @@ func (r *PgProdutoRepository) FindByID(ctx context.Context, id uuid.UUID) (model
 		WHERE id = $1
 	`
 	var produto model.Produto
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.db.QueryRow(ctx, query, id).Scan(
 		&produto.ID,
 		&produto.Name,
 		&produto.Description,
@@ -51,7 +50,7 @@ func (r *PgProdutoRepository) Save(ctx context.Context, produto model.Produto) e
 		INSERT INTO produtos (id, name, description, price, stock_quantity, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.db.Exec(ctx, query,
 		produto.ID,
 		produto.Name,
 		produto.Description,
@@ -73,7 +72,7 @@ func (r *PgProdutoRepository) FindAll(ctx context.Context) ([]model.Produto, err
 		FROM produtos
 	`
 	var produtos []model.Produto
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar produtos: %w", err)
 	}

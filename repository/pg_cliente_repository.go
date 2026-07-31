@@ -7,16 +7,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mellyssamnds/go-pedidos-api/model"
 )
 
 type PgClienteRepository struct {
-	pool *pgxpool.Pool
+	db Querier
 }
 
-func NewPgClienteRepository(pool *pgxpool.Pool) *PgClienteRepository {
-	return &PgClienteRepository{pool: pool}
+func NewPgClienteRepository(db Querier) *PgClienteRepository {
+	return &PgClienteRepository{db: db}
 }
 
 var _ ClienteRepository = (*PgClienteRepository)(nil)
@@ -29,13 +28,14 @@ func (r *PgClienteRepository) FindByID(ctx context.Context, id uuid.UUID) (model
 	`
 
 	var cliente model.Cliente
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.db.QueryRow(ctx, query, id).Scan(
 		&cliente.ID,
 		&cliente.Name,
 		&cliente.Email,
 		&cliente.PasswordHash,
 		&cliente.CreatedAt,
 	)
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return model.Cliente{}, model.ErrClienteNaoEncontrado
@@ -52,13 +52,14 @@ func (r *PgClienteRepository) Save(ctx context.Context, cliente model.Cliente) e
 		VALUES ($1, $2, $3, $4, $5)
 	`
 
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.db.Exec(ctx, query,
 		cliente.ID,
 		cliente.Name,
 		cliente.Email,
 		cliente.PasswordHash,
 		cliente.CreatedAt,
 	)
+
 	if err != nil {
 		return fmt.Errorf("erro ao salvar cliente: %w", err)
 	}
@@ -74,7 +75,7 @@ func (r *PgClienteRepository) FindByEmail(ctx context.Context, email string) (mo
 	`
 
 	var cliente model.Cliente
-	err := r.pool.QueryRow(ctx, query, email).Scan(
+	err := r.db.QueryRow(ctx, query, email).Scan(
 		&cliente.ID,
 		&cliente.Name,
 		&cliente.Email,
@@ -99,7 +100,8 @@ func (r *PgClienteRepository) FindAll(ctx context.Context) ([]model.Cliente, err
 	`
 
 	var clientes []model.Cliente
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query)
+
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar clientes: %w", err)
 	}

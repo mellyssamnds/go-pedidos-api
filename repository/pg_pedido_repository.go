@@ -7,16 +7,15 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/mellyssamnds/go-pedidos-api/model"
 )
 
 type PgPedidoRepository struct {
-	pool *pgxpool.Pool
+	db Querier
 }
 
-func NewPgPedidoRepository(pool *pgxpool.Pool) *PgPedidoRepository {
-	return &PgPedidoRepository{pool: pool}
+func NewPgPedidoRepository(db Querier) *PgPedidoRepository {
+	return &PgPedidoRepository{db: db}
 }
 
 var _ PedidoRepository = (*PgPedidoRepository)(nil)
@@ -29,7 +28,7 @@ func (r *PgPedidoRepository) FindByID(ctx context.Context, id uuid.UUID) (model.
 	`
 
 	var pedido model.Pedido
-	err := r.pool.QueryRow(ctx, query, id).Scan(
+	err := r.db.QueryRow(ctx, query, id).Scan(
 		&pedido.ID,
 		&pedido.ClienteID,
 		&pedido.CreatedAt,
@@ -52,7 +51,7 @@ func (r *PgPedidoRepository) Save(ctx context.Context, pedido model.Pedido) erro
 		INSERT INTO pedidos (id, cliente_id, created_at, status, total_amount)
 		VALUES ($1, $2, $3, $4, $5)
 	`
-	_, err := r.pool.Exec(ctx, query,
+	_, err := r.db.Exec(ctx, query,
 		pedido.ID,
 		pedido.ClienteID,
 		pedido.CreatedAt,
@@ -75,10 +74,11 @@ func (r *PgPedidoRepository) FindAll(ctx context.Context, limit, offset int) ([]
 		LIMIT $1 OFFSET $2
 	`
 
-	rows, err := r.pool.Query(ctx, query, limit, offset)
+	rows, err := r.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("erro ao buscar pedidos: %w", err)
 	}
+
 	defer rows.Close()
 
 	var pedidos []model.Pedido
@@ -110,7 +110,7 @@ func (r *PgPedidoRepository) UpdateStatus(ctx context.Context, pedidoID uuid.UUI
 		SET status = $1
 		WHERE id = $2
 	`
-	result, err := r.pool.Exec(ctx, query, status, pedidoID)
+	result, err := r.db.Exec(ctx, query, status, pedidoID)
 
 	if err != nil {
 		return fmt.Errorf("erro ao atualizar status do pedido: %w", err)
