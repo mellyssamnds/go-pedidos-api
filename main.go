@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mellyssamnds/api-pedidos/config"
-	"github.com/mellyssamnds/api-pedidos/database"
+	"github.com/mellyssamnds/go-pedidos-api/config"
+	"github.com/mellyssamnds/go-pedidos-api/database"
 )
 
 func main() {
