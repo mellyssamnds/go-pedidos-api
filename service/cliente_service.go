@@ -49,3 +49,23 @@ func (s *ClienteService) CreateCliente(ctx context.Context, name, email, passwor
 
 	return cliente, nil
 }
+
+func (s *ClienteService) FindByID(ctx context.Context, id uuid.UUID) (model.Cliente, error) {
+	cliente, err := s.clienteRepo.FindByID(ctx, id)
+
+	if err != nil {
+		return model.Cliente{}, err
+	}
+
+	return cliente, nil
+}
+
+func (s *ClienteService) FindAll(ctx context.Context) ([]model.Cliente, error) {
+	clientes, err := s.clienteRepo.FindAll(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return clientes, nil
+}
