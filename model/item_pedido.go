@@ -10,5 +10,5 @@ type ItemPedido struct {
 	PedidoID  uuid.UUID       `db:"pedido_id" json:"pedidoId"`
 	ProdutoID uuid.UUID       `db:"produto_id" json:"produtoId"`
 	Quantity  int             `db:"quantity" json:"quantity"`
-	UnitPrice decimal.Decimal `db:"unit_price" json:"uni"`
+	UnitPrice decimal.Decimal `db:"unit_price" json:"unitPrice"`
 }
