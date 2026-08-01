@@ -128,3 +128,5 @@ func (s *PedidoService) FindByID(ctx context.Context, id uuid.UUID) (model.Pedid
 func (s *PedidoService) FindAll(ctx context.Context, limit, offset int) ([]model.Pedido, error) {
 	return s.pedidoRepo.FindAll(ctx, limit, offset)
 }
+
+// TODO: implementar PagarPedido e CancelarPedido (com devolução de estoque via transação)
