@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/mellyssamnds/go-pedidos-api/mocks"
 	"github.com/mellyssamnds/go-pedidos-api/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestCreateCliente_Success(t *testing.T) {
-	repo := new(MockClienteRepository)
+	repo := new(mocks.MockClienteRepository)
 	repo.On("FindByEmail", mock.Anything, "anaju@teste.com").
 		Return(model.Cliente{}, model.ErrClienteNaoEncontrado)
 	repo.On("Save", mock.Anything, mock.AnythingOfType("model.Cliente")).
@@ -34,7 +35,7 @@ func TestCreateCliente_Success(t *testing.T) {
 func TestCreateCliente_EmailJaCadastrado(t *testing.T) {
 	clienteExistente := model.Cliente{ID: uuid.New(), Email: "anaju@teste.com"}
 
-	repo := new(MockClienteRepository)
+	repo := new(mocks.MockClienteRepository)
 	repo.On("FindByEmail", mock.Anything, "anaju@teste.com").
 		Return(clienteExistente, nil)
 

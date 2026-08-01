@@ -5,13 +5,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/mellyssamnds/go-pedidos-api/mocks"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestCreateProduto_Success(t *testing.T) {
-	repo := new(MockProdutoRepository)
+	repo := new(mocks.MockProdutoRepository)
 	repo.On("Save", mock.Anything, mock.AnythingOfType("model.Produto")).
 		Return(nil)
 
