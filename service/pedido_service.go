@@ -74,46 +74,52 @@ func (s *PedidoService) CreatePedido(ctx context.Context, clienteID uuid.UUID, i
 	}
 
 	total := decimal.NewFromInt(0)
+	var itensParaSalvar []model.ItemPedido
+
 	for _, item := range itens {
 		produto, err := produtoRepoTx.FindByID(ctx, item.ProductID)
+
 		if err != nil {
 			return model.Pedido{}, err
 		}
 
-		//verifica se há estoque suficiente para o produto
 		if produto.StockQuantity < item.Quantity {
-			return model.Pedido{}, fmt.Errorf("%w: produto %s", model.ErrEstoqueInsuficiente, produto.Name)
+			return model.Pedido{}, model.ErrEstoqueInsuficiente
 		}
+
 		//atualiza o estoque do produto
 		estoqueAtualizado := produto.StockQuantity - item.Quantity
 		if err := produtoRepoTx.UpdateStock(ctx, produto.ID, estoqueAtualizado); err != nil {
-			return model.Pedido{}, fmt.Errorf("erro ao atualizar estoque do produto %s: %w", produto.Name, err)
+			return model.Pedido{}, fmt.Errorf("erro ao atualizar estoque: %w", err)
 		}
 
 		itemPedido := model.ItemPedido{
 			ID:        uuid.New(),
 			PedidoID:  pedido.ID,
-			ProdutoID: item.ProductID,
+			ProdutoID: produto.ID,
 			Quantity:  item.Quantity,
 			UnitPrice: produto.Price,
 		}
 
-		if err := itemPedidoRepoTx.Save(ctx, itemPedido); err != nil {
-			return model.Pedido{}, err
-		}
-
-		//calcula o total acumulado do item e adiciona ao total do pedido
-		subtotal := produto.Price.Mul(decimal.NewFromInt(int64(item.Quantity)))
-		total = total.Add(subtotal)
+		//adiciona item à lista de itens para salvar
+		itensParaSalvar = append(itensParaSalvar, itemPedido)
+		total = total.Add(produto.Price.Mul(decimal.NewFromInt(int64(item.Quantity))))
 	}
 
+	//atualiza o total do pedido
 	pedido.TotalAmount = total
 
 	if err := pedidoRepoTx.Save(ctx, pedido); err != nil {
 		return model.Pedido{}, err
 	}
 
-	//confirma transação
+	//salva os itens do pedido
+	for _, item := range itensParaSalvar {
+		if err := itemPedidoRepoTx.Save(ctx, item); err != nil {
+			return model.Pedido{}, err
+		}
+	}
+	//confirma a transação
 	if err := tx.Commit(ctx); err != nil {
 		return model.Pedido{}, fmt.Errorf("erro ao confirmar transação: %w", err)
 	}
